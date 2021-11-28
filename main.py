@@ -17,8 +17,8 @@ class Data :
         # Timestamp is a tuple with (Read, Write) timestamp value.
         self.timestamp : tuple(str, int, int) = timestamp
     def __str__(self) :
-        str = "val : " + self.val + "timestamp : " + self.timestamp + " version : " + self.version 
-        return str
+        string = "val : " + str(self.val) + " timestamp : " + str(self.timestamp) + " version : " + str(self.version) 
+        return string
 
 class Database :
     # Database containing dictionary of data points.
@@ -34,7 +34,8 @@ class Database :
         
     def print (self) :
         # Print the database to the CLI 
-        for key, value in self.__data :
+        for key in self.__data :
+            value = self.__data[key]
             print(f"{key} : {value}")
     
     
@@ -54,7 +55,7 @@ class Database :
     def generateRandom(self, n : int) :
         # Generate a random data for the database. 
         # n is the number of random data
-        for key in range(1, n) : 
+        for key in range(1, n+1) : 
             val = random.randint(0, 100)
             self.__data[key] = Data(key, val)
     
@@ -126,7 +127,7 @@ class App :
         self.schedule : list[Transaction] = []
         self.database : Database = Database()
         # All the possible operation
-        self.__operations : list[str] = ["read", "write", "add", "subtract", "multiply", "divide", "commit", "rollback"]
+        self.__operations : list[str] = ["read", "write", "add", "subtract", "multiply", "divide", "commit"]
 
     def printSchedule(self) :
         print("Schedule")
@@ -135,19 +136,36 @@ class App :
             print(f"[Transaction {transaction.id}] {transaction.instructions}")
 
     def generateTransactions(self, n : int = 1) :
+        #!RULES
+        #!CAN'T ADD, MULTIPLY, ETC a DATA THAT HAS NOT BEEN READ. 
         # Generate a random transaction 
         def generateRandomInstructions(self, n : int, m : int) :
             #  n = number of data in the database
             #  m = number of instruction to generate 
             instructions = []
             for i in range(m) :
+                #! find a way to implement this better later
                 randN = random.randint(1, n)
                 randM = random.randint(1, len(self.__operations)-1)
-                instruction = (randN, self.__operations[randM])
+                operation = self.__operations[randM]
+                secondVal = 0
+                if(operation not in ["read", "write"]) :
+                    secondVal = random.randint(1, 200)
+                if(operation == "commit") : 
+                    randN = 0
+                instruction = (operation, randN, secondVal)
                 instructions.append(instruction)
+                if(operation == "commit") :
+                    if(len(instructions) == 1) : 
+                        instructions.pop(0)
+                        continue 
+                    break
+            if(instructions[-1][0] != "commit") : 
+                instructions.append(("commit", 0,0))
             return instructions
-        transaction = Transaction(self.__timestamp, self.__timestamp, generateRandomInstructions(self, len(self.database)-1, 8)) 
-        self.schedule.add(transaction)
+        for id in range(1,n+1) :
+            transaction = Transaction(id, self.__timestamp, generateRandomInstructions(self, len(self.database)-1, 5)) 
+            self.schedule.append(transaction)
 
     def run(self) :
         print("Starting the application.")
@@ -156,7 +174,7 @@ class App :
         print("Database : ")
         self.database.print()
         # Initialize a random list of transactions
-        self.generateTransactions() 
+        self.generateTransactions(5) 
         self.printSchedule()
         # for transaction in self.schedule :
         #     print("[START] Transaction", transaction.id)
