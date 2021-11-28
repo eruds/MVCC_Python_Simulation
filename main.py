@@ -143,11 +143,16 @@ class App :
             #  n = number of data in the database
             #  m = number of instruction to generate 
             instructions = []
+            cache = []
             for i in range(m) :
                 #! find a way to implement this better later
                 randN = random.randint(1, n)
                 randM = random.randint(1, len(self.__operations)-1)
-                operation = self.__operations[randM]
+                temp = self.__operations + ["write" for i in range(3)]
+                operation = temp[randM]
+                if(operation != "read" and randN not in cache) :
+                    operation = "read"
+                    cache.append(randN)
                 secondVal = 0
                 if(operation not in ["read", "write"]) :
                     secondVal = random.randint(1, 200)
@@ -164,17 +169,17 @@ class App :
                 instructions.append(("commit", 0,0))
             return instructions
         for id in range(1,n+1) :
-            transaction = Transaction(id, self.__timestamp, generateRandomInstructions(self, len(self.database)-1, 5)) 
+            transaction = Transaction(id, self.__timestamp, generateRandomInstructions(self, len(self.database)-1, 10)) 
             self.schedule.append(transaction)
 
     def run(self) :
         print("Starting the application.")
         # Initialize a random database 
-        self.database.generateRandom(10)
+        self.database.generateRandom(3)
         print("Database : ")
         self.database.print()
         # Initialize a random list of transactions
-        self.generateTransactions(5) 
+        self.generateTransactions(3) 
         self.printSchedule()
         # for transaction in self.schedule :
         #     print("[START] Transaction", transaction.id)
